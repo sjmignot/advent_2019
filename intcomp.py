@@ -11,7 +11,6 @@ ADJUST_REL_BASE = 9
 END = 99
 
 # OPCODE to OPNAME
-
 OPNAME = {
     1: 'add',
     2: 'mult',
@@ -24,6 +23,7 @@ OPNAME = {
     9: 'adjust rel base',
     99: 'end'   
 }
+
 # MODES
 POS_MODE = 0
 IM_MODE = 1
@@ -34,6 +34,7 @@ MODE_NAME = {
     1: 'IMMEDIATE',
     2: 'RELATIVE'
 }
+
 # OP_FEATURES
 operation_length = {
     ADD: 4,
@@ -63,6 +64,7 @@ operation_num_inputs = {
 # JUMP SET
 JUMPS = { JUMP_IF_TRUE, JUMP_IF_FALSE }
 
+#WRITE SET
 WRITES = {ADD, MULT, INPUT, LESS_THAN, EQUALS}
 
 # DISPLAY FUNCITONS
@@ -80,7 +82,8 @@ def print_step(opcode, win, input_modes, inputs, output, rel_base):
          
 # TESTS
 tests = {
-    (109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99): [109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99],
+    (109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99):        
+		[109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99],
     (109, -1, 4, 1, 99): [-1],
     (109, -1, 104, 1, 99): [1],
     (109, -1, 204, 1, 99): [109],
@@ -92,32 +95,32 @@ tests = {
     (104,1125899906842624,99): [1125899906842624],
 }
 
-def run_computer(comp_string, c_i, ip = 0, rel_base = 0, print_output=False):
+def run_computer(comp_string, c_i, ip = 0, rel_base = 0, print_output=False, return_on_output=False):
     outputs = []
     while(True):
         opcode_and_settings = str(comp_string[ip]).zfill(5)
         opcode = int(opcode_and_settings[-2:])
        
         if(opcode == END):
-            return outputs
+            return ip, outputs
        
         input_modes = [int(opcode_and_settings[-3]), int(opcode_and_settings[-4]), int(opcode_and_settings[-5])]
        
-        window = operation_length[opcode]
-        win = comp_string[ip: ip+window]
-        ip += window
+        window_size = operation_length[opcode]
+        win = comp_string[ip: ip+window_size]
+        ip += window_size
        
         num_inputs = operation_num_inputs[opcode]
         inputs_prog = [win[i+1] if input_modes[i]==IM_MODE
             else comp_string[rel_base+win[i+1]] if input_modes[i]==REL_MODE
             else comp_string[win[i+1]]
-            for i in range(operation_num_inputs[opcode]-1)]
+            for i in range(num_inputs-1)]
        
         # WRITE OPERATIONS LOCATIONS (OUTPUT) NEVER IN POSITION MODE
         if(opcode in WRITES):
-            inputs_prog.append(rel_base+win[-1] if input_modes[operation_num_inputs[opcode]-1]==REL_MODE else win[-1])
+            inputs_prog.append(rel_base+win[-1] if input_modes[num_inputs-1]==REL_MODE else win[-1])
         else:
-            inputs_prog.append(win[-1] if input_modes[operation_num_inputs[opcode]-1]==IM_MODE else comp_string[rel_base+win[-1]] if input_modes[operation_num_inputs[opcode]-1]==REL_MODE else comp_string[win[-1]])
+            inputs_prog.append(win[-1] if input_modes[operation_num_inputs[opcode]-1]==IM_MODE else comp_string[rel_base+win[-1]] if input_modes[num_inputs-1]==REL_MODE else comp_string[win[-1]])
         
         if(opcode == INPUT):
             inputs_prog.insert(0,c_i.pop(0))
@@ -125,6 +128,7 @@ def run_computer(comp_string, c_i, ip = 0, rel_base = 0, print_output=False):
         if(opcode == OUTPUT):
             outputs.append(inputs_prog[-1])
             if(print_output): print(inputs_prog[-1])
+            if(return_on_output): return ip, outputs
             continue
 
         if(opcode in JUMPS):
@@ -146,4 +150,3 @@ def run_computer(comp_string, c_i, ip = 0, rel_base = 0, print_output=False):
                 LESS_THAN: 1 if inputs_prog[0] < inputs_prog[1] else 0,
                 EQUALS: 1 if inputs_prog[0] == inputs_prog[1] else 0
             }[opcode]
-
