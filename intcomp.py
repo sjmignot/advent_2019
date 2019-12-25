@@ -92,13 +92,14 @@ tests = {
     (104,1125899906842624,99): [1125899906842624],
 }
 
-def run_computer(comp_string, c_i, ip = 0, rel_base = 0):
+def run_computer(comp_string, c_i, ip = 0, rel_base = 0, print_output=False):
+    outputs = []
     while(True):
         opcode_and_settings = str(comp_string[ip]).zfill(5)
         opcode = int(opcode_and_settings[-2:])
        
         if(opcode == END):
-            return 'ENDED GRACEFULLY'
+            return outputs
        
         input_modes = [int(opcode_and_settings[-3]), int(opcode_and_settings[-4]), int(opcode_and_settings[-5])]
        
@@ -122,7 +123,8 @@ def run_computer(comp_string, c_i, ip = 0, rel_base = 0):
             inputs_prog.insert(0,c_i.pop(0))
 
         if(opcode == OUTPUT):
-            print(inputs_prog[-1])
+            outputs.append(inputs_prog[-1])
+            if(print_output): print(inputs_prog[-1])
             continue
 
         if(opcode in JUMPS):
